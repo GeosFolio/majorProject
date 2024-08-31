@@ -82,7 +82,7 @@ fun TrackingScreen(modifier: Modifier, navController: NavController, authViewMod
                     ContextCompat.startForegroundService(context, this)
                 }
             }) {
-                Text(text = "Stop")
+                Text(text = "Stop testing change")
             }
         }
     } else {
