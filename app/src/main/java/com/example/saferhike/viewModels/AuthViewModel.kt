@@ -1,4 +1,4 @@
-package com.example.saferhike.authentication
+package com.example.saferhike.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -35,7 +35,7 @@ class AuthViewModel : ViewModel() {
                     currentUser = auth.currentUser
                 } else {
                     _authState.value =
-                        AuthState.Error(task.exception?.message?: "Something went wrong")
+                        AuthState.Error(task.exception?.message ?: "Something went wrong")
                 }
             }
     }

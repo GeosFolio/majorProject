@@ -32,15 +32,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.saferhike.R
-import com.example.saferhike.authentication.AuthState
-import com.example.saferhike.authentication.AuthViewModel
+import com.example.saferhike.api.ApiService
+import com.example.saferhike.viewModels.AuthState
+import com.example.saferhike.viewModels.AuthViewModel
 
 @Composable
-fun SignupScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel) {
+fun SignupScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,
+                 apiService: ApiService) {
     var email by remember {
         mutableStateOf("")
     }
     var password by remember {
+        mutableStateOf("")
+    }
+    var fName by remember {
+        mutableStateOf("")
+    }
+    var lName by remember {
+        mutableStateOf("")
+    }
+    var emergencyContacts by remember {
         mutableStateOf("")
     }
     val authState = authViewModel.authState.observeAsState()

@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.saferhike.navigators.AppNavigator
-import com.example.saferhike.authentication.AuthViewModel
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.example.saferhike.viewModels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

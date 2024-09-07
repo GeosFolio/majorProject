@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.saferhike.api.ApiService
-import com.example.saferhike.authentication.AuthViewModel
+import com.example.saferhike.viewModels.AuthViewModel
 
 @Composable
 fun HikeScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,

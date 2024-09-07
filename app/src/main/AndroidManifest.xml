@@ -9,7 +9,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".tracking.LocationApp"
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -36,9 +35,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".tracking.LocationService"
-            android:foregroundServiceType="location"
-            android:exported="false"/>
     </application>
 </manifest>

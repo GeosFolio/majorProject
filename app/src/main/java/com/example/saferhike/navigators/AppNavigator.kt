@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.saferhike.api.ApiService
-import com.example.saferhike.authentication.AuthViewModel
+import com.example.saferhike.viewModels.AuthViewModel
 import com.example.saferhike.composables.AccountScreen
 import com.example.saferhike.composables.HikeScreen
 import com.example.saferhike.composables.NewHikeScreen
@@ -21,26 +21,12 @@ import com.example.saferhike.composables.TrackingScreen
 fun AppNavigator(modifier: Modifier = Modifier,authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val apiService = ApiService()
-    /*
-    val coroutineScope = rememberCoroutineScope()
-    Button(onClick = {
-            coroutineScope.launch {
-                try {
-                    res = helloWorldService.getHelloWorld()
-                } catch (e: Exception) {
-                    res = "Error: ${e.message}"
-                }
-            }
-        }) {
-            Text(text = "Test API Call")
-        }
-     */
     NavHost(navController = navController, startDestination = "login", builder = {
         composable("login") {
             LoginScreen(modifier, navController, authViewModel)
         }
         composable("signup") {
-            SignupScreen(modifier, navController, authViewModel)
+            SignupScreen(modifier, navController, authViewModel, apiService)
         }
         composable("home") {
             HomeScreen(modifier, navController, authViewModel, apiService)
