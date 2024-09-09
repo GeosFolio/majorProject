@@ -82,7 +82,7 @@ fun SignupScreen(modifier: Modifier, navController: NavController, authViewModel
             painter = painterResource(id = R.drawable.leaf),
             contentDescription = "Signup image"
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(value = email, onValueChange = {
             email = it
         }, label = {
@@ -95,11 +95,30 @@ fun SignupScreen(modifier: Modifier, navController: NavController, authViewModel
         },
             visualTransformation = PasswordVisualTransformation()
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(value = fName, onValueChange = {
+            fName = it
+        }, label = {
+            Text(text = "First Name")
+        })
+        OutlinedTextField(value = lName, onValueChange = {
+            lName = it
+        }, label = {
+            Text(text = "Last Name")
+        })
+        Spacer(modifier = Modifier.height(8.dp))
+        OutlinedTextField(value = emergencyContacts, onValueChange = {
+            emergencyContacts = it
+        }, label = {
+            Text(text = "Emergency Contacts (separate by commas)")
+        })
+        Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
-            authViewModel.signup(email,password)
+            val contactsList = emergencyContacts.split(",").map { it.trim() }
+            authViewModel.signup(email,password,fName,lName,contactsList,apiService.apiService)
         },
-            enabled = authState.value != AuthState.Loading) {
+            enabled = authState.value != AuthState.Loading
+                    || authState.value != AuthState.Authenticated) {
             Text(text = "Signup")
         }
         TextButton(onClick = {

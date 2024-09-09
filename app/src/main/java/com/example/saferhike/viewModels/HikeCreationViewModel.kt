@@ -1,6 +1,7 @@
 package com.example.saferhike.viewModels
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,8 @@ class HikeCreationViewModel(uid: String) : ViewModel() {
         name = mutableStateOf(""),
         supplies = mutableStateOf(""),
         expectedReturnTime = mutableStateOf(""),
+        lat = mutableDoubleStateOf(0.0),
+        lng = mutableDoubleStateOf(0.0),
         markers = _markers
     )
 
@@ -40,6 +43,8 @@ class HikeCreationViewModel(uid: String) : ViewModel() {
             name = hike.name.value,
             supplies = hike.supplies.value,
             expectedReturnTime = hike.expectedReturnTime.value,
+            lat = hike.lat.value,
+            lng = hike.lng.value,
             markers = hike.markers.value.map { marker ->
                 HikeMarkerReq(
                     lat = marker.state.position.latitude,
@@ -73,6 +78,8 @@ data class Hike(
     var name: MutableState<String>,
     var supplies: MutableState<String>,
     var expectedReturnTime: MutableState<String>,
+    var lat: MutableState<Double>,
+    var lng: MutableState<Double>,
     var markers: StateFlow<List<HikeMarker>>
 )
 data class HikeMarker (
@@ -84,6 +91,8 @@ data class HikeReq(
     val uid: String,
     val name: String,
     val supplies: String,
+    var lat: Double,
+    var lng: Double,
     val expectedReturnTime: String,
     val markers: List<HikeMarkerReq>
 )

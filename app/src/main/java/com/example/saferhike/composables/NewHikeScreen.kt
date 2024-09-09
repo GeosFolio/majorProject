@@ -54,7 +54,7 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
                   apiService: ApiService, viewModel: HikeCreationViewModel = remember {
         HikeCreationViewModel(authViewModel.currentUser?.uid ?: "Uid Missing")
     }) {
-    var location by remember { mutableStateOf<Location?>(null) }
+
     var locationError by remember { mutableStateOf<String?>(null) }
     var permissionGranted by remember { mutableStateOf(false) }
     var clickedPosition by remember { mutableStateOf(LatLng(0.0, 0.0)) }
@@ -66,6 +66,10 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf("") }
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(0.0,
+            0.0), 10f)
+    }
 
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
@@ -95,12 +99,11 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
     if (permissionGranted) {
         val client = LocationServices.getFusedLocationProviderClient(context)
         getCurrentLocation(client) { resultLocation, error ->
-            location = resultLocation
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(resultLocation?.latitude
+                ?: 0.0, resultLocation?.longitude?: 0.0), 10f)
             locationError = error
-        }
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition.fromLatLngZoom(LatLng(location?.latitude?: 0.0,
-                location?.longitude?: 0.0), 10f)
+            viewModel.hike.lat.value = resultLocation?.latitude?: 0.0
+            viewModel.hike.lng.value = resultLocation?.longitude?: 0.0
         }
         val markers = viewModel.hike.markers.collectAsState()
     Column (

@@ -72,7 +72,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, authViewModel: 
                 Text(text = "New Hike")
             }
             Button(onClick = {
-                navController.navigate("trackHike")
+                navController.navigate("hikes")
             }) {
                 Text(text = "View Past Hikes")
             }
