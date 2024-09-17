@@ -14,16 +14,17 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
     var currentUser: FirebaseUser? = null
+    var userData: UserReq = UserReq("0", "", "", emptyList())
 
-    fun checkAuthStatus(){
-        if(auth.currentUser==null){
+    fun checkAuthStatus() {
+        if (auth.currentUser==null) {
             _authState.value = AuthState.Unauthenticated
         } else {
             _authState.value = AuthState.Authenticated
         }
     }
 
-    fun login(email : String, password : String){
+    fun login(email : String, password : String, apiService: ApiRoutes){
 
         if(email.isEmpty() || password.isEmpty()) {
             _authState.value = AuthState.Error("Email or Password missing")
@@ -34,8 +35,27 @@ class AuthViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener{task->
                 if (task.isSuccessful){
-                    _authState.value = AuthState.Authenticated
                     currentUser = auth.currentUser
+                    viewModelScope.launch {
+                        try {
+                            val response = apiService.getUser(currentUser?.uid?:"")
+                            if (response.isSuccessful) {
+                                val fetchedUser = response.body()
+                                if (fetchedUser != null) {
+                                    userData = fetchedUser
+                                    _authState.value = AuthState.Authenticated
+                                } else {
+                                    _authState.value = AuthState.Error("User data not found")
+                                }
+                            } else {
+                                _authState.value =
+                                    AuthState.Error("Failed to fetch user:" +
+                                            "${response.code()} : ${response.message()}")
+                            }
+                        } catch (e: Exception) {
+                            _authState.value = AuthState.Error("Error fetching user: ${e.message}")
+                        }
+                    }
                 } else {
                     _authState.value =
                         AuthState.Error(task.exception?.message ?: "Something went wrong")
@@ -54,7 +74,7 @@ class AuthViewModel : ViewModel() {
             .addOnCompleteListener{task->
                 if (task.isSuccessful) {
                     currentUser = auth.currentUser
-                    val userData = UserReq(currentUser?.uid ?: "0", fName, lName, contactsList)
+                    userData = UserReq(currentUser?.uid ?: "0", fName, lName, contactsList)
                     viewModelScope.launch {
                         try {
                             val response = apiService.createUser(userData)
@@ -75,7 +95,24 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun signout(){
+    fun updateUser(userReq: UserReq, apiService: ApiRoutes) {
+        _authState.value = AuthState.Loading
+        viewModelScope.launch {
+            try {
+                val response = apiService.updateUser(userReq)
+                if (response.isSuccessful) {
+                    _authState.value = AuthState.Authenticated
+                } else {
+                    _authState.value =
+                        AuthState.Error("Unable to update account: ${response.code()} : ${response.message()}")
+                }
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("Something went wrong: ${e.message}")
+            }
+        }
+    }
+
+    fun signout() {
         auth.signOut()
         _authState.value = AuthState.Unauthenticated
         currentUser = null

@@ -33,18 +33,19 @@ fun HomeScreen(modifier: Modifier, navController: NavController, authViewModel: 
                apiService: ApiService) {
     val authState = authViewModel.authState.observeAsState()
     val user: FirebaseUser? = authViewModel.currentUser
+    val userData = authViewModel.userData
 
-    var distance by remember {
+    val distance by remember {
         mutableIntStateOf(0)
     }
-    var hikes by remember {
+    val hikes by remember {
         mutableIntStateOf(0)
     }
-    var elevation by remember {
+    val elevation by remember {
         mutableIntStateOf(0)
     }
-    var first by remember {
-        mutableStateOf("FirstName")
+    val first by remember {
+        mutableStateOf(userData.fName)
     }
     LaunchedEffect(authState.value) {
         when(authState.value) {
@@ -88,8 +89,8 @@ fun HomeScreen(modifier: Modifier, navController: NavController, authViewModel: 
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(onClick = { /*TODO*/ }) {
-                Text(text = "Settings")
+            Button(onClick = { navController.navigate("edit") }) {
+                Text(text = "Edit Account")
             }
             Spacer(modifier = Modifier.width(18.dp))
             Button(onClick = {authViewModel.signout()}) {

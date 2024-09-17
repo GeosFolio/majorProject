@@ -46,13 +46,14 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.util.Calendar
 
 @Composable
-fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,
-                  apiService: ApiService, viewModel: HikeCreationViewModel = remember {
-        HikeCreationViewModel(authViewModel.currentUser?.uid ?: "Uid Missing")
+fun NewHikeScreen(navController: NavController, authViewModel: AuthViewModel,
+                  apiService: ApiService, hikeJson: String?, viewModel: HikeCreationViewModel = remember {
+        HikeCreationViewModel(authViewModel.currentUser?.uid ?: "Uid Missing", hikeJson)
     }) {
 
     var locationError by remember { mutableStateOf<String?>(null) }
@@ -65,6 +66,8 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
     var selectedTime by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var selectedMarkerPosition by remember { mutableStateOf(LatLng(0.0, 0.0)) }
     var result by remember { mutableStateOf("") }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(0.0,
@@ -137,9 +140,14 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
         ) {
             markers.value.forEach { marker ->
                 Marker(
-                    state = marker.state,
+                    state = MarkerState(LatLng(marker.lat, marker.lng)),
                     title = marker.title,
-                    snippet = marker.description
+                    snippet = marker.description,
+                    onInfoWindowClick = {
+                        selectedMarkerPosition = LatLng(marker.lat, marker.lng)
+                        showDeleteDialog = true
+
+                    }
                 )
             }
         }
@@ -216,6 +224,27 @@ fun NewHikeScreen(modifier: Modifier, navController: NavController, authViewMode
                 showTimePicker = false
                 viewModel.hike.expectedReturnTime.value = "$selectedDate $time"
             }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.removeMarker(selectedMarkerPosition)
+                        showDeleteDialog = false
+                    }) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                },
+                title = { Text("Delete Marker") },
+                text = { Text("Are you sure you want to delete this marker?") }
+            )
         }
     } else {
         Text("Location access denied. Please grant location access.")

@@ -16,32 +16,47 @@ class HikeListViewModel() : ViewModel() {
         onSuccess: (List<HikeReq>) -> Unit,
         onError: (String) -> Unit
     ) {
-        if (_hikes.value.isEmpty()) {
-            viewModelScope.launch {
-                try {
-                    val response = apiService.getUserHikes(uid)
-                    if (response.isSuccessful) {
-                        val hikes = response.body()
-                        if (hikes != null) {
-                            _hikes.value = hikes
-                            onSuccess(hikes)
-                        } else {
-                            onError("No hikes found for user $uid")
-                        }
+        viewModelScope.launch {
+            try {
+                val response = apiService.getUserHikes(uid)
+                if (response.isSuccessful) {
+                    val hikes = response.body()
+                    if (hikes != null) {
+                        _hikes.value = hikes
+                        onSuccess(_hikes.value)
                     } else {
-                        onError("Failed to fetch hikes: ${response.code()} : ${response.message()}")
+                        onError("No hikes found for user $uid")
                     }
-                } catch (e: HttpException) {
-                    onError("HTTP error: ${e.message}")
-                } catch (e: IOException) {
-                    onError("Network error: ${e.message}")
-                } catch (e: Exception) {
-                    onError("Unexpected error: ${e.message}")
+                } else {
+                    onError("Failed to fetch hikes: ${response.code()} : ${response.message()}")
                 }
+            } catch (e: HttpException) {
+                onError("HTTP error: ${e.message}")
+            } catch (e: IOException) {
+                onError("Network error: ${e.message}")
+            } catch (e: Exception) {
+                onError("Unexpected error: ${e.message}")
             }
-        } else {
-            onSuccess(_hikes.value)
         }
-
+    }
+    fun delete(apiService: ApiRoutes, hikeReq: HikeReq,
+               onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.deleteHike(hikeReq.pid)
+                if (response.isSuccessful) {
+                    _hikes.value = _hikes.value.filterNot { it.pid == hikeReq.pid }
+                    onSuccess()
+                } else {
+                    onError("Failed to delete hike: ${response.code()} : ${response.message()}")
+                }
+            } catch (e: HttpException) {
+                onError("HTTP error: ${e.message}")
+            } catch (e: IOException) {
+                onError("Network error: ${e.message}")
+            } catch (e: Exception) {
+                onError("Unexpected error: ${e.message}")
+            }
+        }
     }
 }

@@ -32,11 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.saferhike.R
+import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.AuthState
 import com.example.saferhike.viewModels.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel) {
+fun LoginScreen(modifier: Modifier = Modifier, navController: NavController,
+                authViewModel: AuthViewModel, apiService: ApiService) {
     var email by remember {
         mutableStateOf("")
     }
@@ -85,7 +87,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             visualTransformation = PasswordVisualTransformation())
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
-            authViewModel.login(email,password)
+            authViewModel.login(email,password,apiService.apiService)
         },
             enabled = authState.value != AuthState.Loading) {
             Text(text = "Login")
