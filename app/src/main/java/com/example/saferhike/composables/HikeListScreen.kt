@@ -18,15 +18,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -92,6 +95,7 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                        hikeListViewModel: HikeListViewModel, apiService: ApiService,
                        context: Context, inProgressHike: HikeReq?, onDelete: (h: HikeReq) -> Unit) {
     var isExpanded by remember { mutableStateOf(false) }
+    var showPrompt by remember { mutableStateOf(false) }
     val gson = Gson()
     Log.d("HikeListScreen", "Making Hike Card With: $hike : $inProgressHike")
     // The card UI
@@ -126,14 +130,9 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
             // If the card is expanded, show additional details and buttons
             if (isExpanded) {
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Display hike details
                 Text(text = "Supplies: ${hike.supplies}")
                 Text(text = "Last Completion Time: ${hike.expectedReturnTime}")
-
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // Action buttons (edit, start, delete)
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
@@ -144,19 +143,21 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                     }) {
                         Text(text = "Edit")
                     }
-
                     Button(onClick = {
-                        val hikeJson = gson.toJson(hike)
-                        navController.navigate("trackHike/$hikeJson")
+                        if (inProgressHike != null && inProgressHike.pid == hike.pid) {
+                            val hikeJson = gson.toJson(hike)
+                            navController.navigate("trackHike/$hikeJson")
+                        } else {
+                            showPrompt = true
+                        }
                     },
-                        enabled = inProgressHike == null || inProgressHike.pid == hike.pid ){
+                        enabled = inProgressHike == null || inProgressHike.pid == hike.pid ) {
                         if (inProgressHike != null && inProgressHike.pid == hike.pid) {
                             Text("Continue Hike")
                         } else {
-                            Text(text = "Start Hike")
+                            Text("Start Hike")
                         }
                     }
-
                     Button(onClick = {
                         // Handle delete action
                         // Call API to delete hike or trigger delete logic here
@@ -177,5 +178,68 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                 }
             }
         }
+        if (showPrompt) {
+            DurationDialog(
+                onConfirm = { hours, minutes ->
+                    hike.expectedReturnTime = "$hours:$minutes"
+                    hikeListViewModel.startHike(hike, apiService,
+                        onSuccess = {
+                            val hikeJson = gson.toJson(hike)
+                            navController.navigate("trackHike/$hikeJson")
+                        },
+                        onError = {
+                            Toast.makeText(context, "Failed to start hike: $it",
+                                Toast.LENGTH_LONG).show()
+                        }
+                    )
+                },
+                onDismiss = {
+                    showPrompt = false
+                }
+            )
+        }
+
     }
+}
+
+@Composable
+fun DurationDialog(
+    onConfirm: (Int, Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var hours by remember { mutableIntStateOf(0) }
+    var minutes by remember { mutableIntStateOf(0) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Enter Expected Hike Duration") },
+        text = {
+            Column {
+                TextField(
+                    value = hours.toString(),
+                    onValueChange = {
+                    hours = it.toIntOrNull() ?: 0
+                },
+                    label = { Text("Hours") }
+                )
+                TextField(
+                    value = minutes.toString(),
+                    onValueChange = { minutes = it.toIntOrNull() ?: 0 },
+                    label = { Text("Minutes")}
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(hours, minutes)
+            }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

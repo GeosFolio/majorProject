@@ -87,7 +87,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController,
             visualTransformation = PasswordVisualTransformation())
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = {
-            authViewModel.login(email,password,apiService.apiService)
+            authViewModel.login(email,password,apiService)
         },
             enabled = authState.value != AuthState.Loading) {
             Text(text = "Login")

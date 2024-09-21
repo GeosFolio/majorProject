@@ -75,7 +75,7 @@ fun HomeScreen(modifier: Modifier, navController: NavController, authViewModel: 
             Button(onClick = {
                 navController.navigate("hikes")
             }) {
-                Text(text = "View Past Hikes")
+                Text(text = "View Hikes")
             }
         }
         Spacer(modifier = Modifier.height(64.dp))

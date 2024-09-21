@@ -3,6 +3,7 @@ package com.example.saferhike.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiRoutes
+import com.example.saferhike.api.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -56,6 +57,26 @@ class HikeListViewModel() : ViewModel() {
                 onError("Network error: ${e.message}")
             } catch (e: Exception) {
                 onError("Unexpected error: ${e.message}")
+            }
+        }
+    }
+
+    fun startHike(hikeReq: HikeReq, apiService: ApiService,
+                  onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.apiService.startHike(hikeReq)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError("Something wrong with flask :${response.message()}:${response.code()}")
+                }
+            } catch (e: HttpException) {
+                onError("HTTP error: ${e.message}")
+            } catch (e: IOException) {
+                onError("Network error: ${e.message}")
+            } catch (e: Exception) {
+                onError("Unexpected Error: ${e.message}")
             }
         }
     }

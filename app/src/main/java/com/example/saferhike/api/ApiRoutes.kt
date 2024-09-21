@@ -33,4 +33,7 @@ interface ApiRoutes {
 
     @PUT("users")
     suspend fun updateUser(@Body user: UserReq): Response<Void>
+
+    @PUT("start")
+    suspend fun startHike(@Body user: HikeReq): Response<Void>
 }

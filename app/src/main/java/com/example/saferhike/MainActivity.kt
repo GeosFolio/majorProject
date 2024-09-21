@@ -1,7 +1,5 @@
 package com.example.saferhike
-import android.content.IntentFilter
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,7 +12,10 @@ import com.example.saferhike.navigators.AppNavigator
 import com.example.saferhike.viewModels.AuthViewModel
 
 class MainActivity : ComponentActivity() {
+    //private val keyStore: KeyStore = KeyStore.getInstance("AndroidKeyStore")
     override fun onCreate(savedInstanceState: Bundle?) {
+        //keyStore.load(null)
+        //val privateKey = keyStore.getKey("SaferHikeKeyPair", null) as PrivateKey
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val authViewModel : AuthViewModel by viewModels()

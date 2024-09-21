@@ -33,10 +33,13 @@ fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
             // Done
             HomeScreen(modifier, navController, authViewModel, apiService)
         }
-        composable("newHike") {
+        composable("newHike/{hikeJson}") {
             val hikeJson = it.arguments?.getString("hikeJson")
             // Done
             NewHikeScreen(navController, authViewModel, apiService, hikeJson)
+        }
+        composable("newHike") {
+            NewHikeScreen(navController, authViewModel, apiService, null)
         }
         composable("hikes") {
             // Done
