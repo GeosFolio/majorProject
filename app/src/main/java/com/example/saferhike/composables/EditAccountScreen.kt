@@ -138,7 +138,7 @@ fun EditAccountScreen(
                 authViewModel.userData.fName = fName
                 authViewModel.userData.lName = lName
                 authViewModel.userData.emergencyContacts = emergencyContacts.toList()
-                authViewModel.updateUser(authViewModel.userData, apiService.apiService)
+                authViewModel.updateUser(authViewModel.userData, apiService)
                 navController.navigate("home")
             }
         ) {

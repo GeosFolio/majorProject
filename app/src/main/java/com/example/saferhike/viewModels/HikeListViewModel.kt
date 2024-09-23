@@ -1,5 +1,6 @@
 package com.example.saferhike.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiRoutes
@@ -12,22 +13,24 @@ import java.io.IOException
 class HikeListViewModel() : ViewModel() {
     private val _hikes = MutableStateFlow<List<HikeReq>>(emptyList())
     fun getUserHikes(
-        apiService: ApiRoutes,
+        apiService: ApiService,
         uid: String,
         onSuccess: (List<HikeReq>) -> Unit,
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
             try {
-                val response = apiService.getUserHikes(uid)
+                val response = apiService.apiService.getUserHikes(uid)
                 if (response.isSuccessful) {
                     val hikes = response.body()
-                    if (hikes != null) {
-                        _hikes.value = hikes
-                        onSuccess(_hikes.value)
-                    } else {
-                        onError("No hikes found for user $uid")
+                    val decryptedHikes = emptyList<HikeReq>().toMutableList()
+                    Log.d("HikeListViewModel", "Trying to decrypt hike list")
+                    hikes?.forEach {
+                        decryptedHikes += apiService.decryptHikeReq(it, uid)
                     }
+                    Log.d("HikeListViewModel", "Done decrypting hike list")
+                    _hikes.value = decryptedHikes
+                    onSuccess(_hikes.value)
                 } else {
                     onError("Failed to fetch hikes: ${response.code()} : ${response.message()}")
                 }
@@ -65,7 +68,8 @@ class HikeListViewModel() : ViewModel() {
                   onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val response = apiService.apiService.startHike(hikeReq)
+                val encryptedHikeReq = apiService.encryptHikeReq(hikeReq)
+                val response = apiService.apiService.startHike(encryptedHikeReq)
                 if (response.isSuccessful) {
                     onSuccess()
                 } else {

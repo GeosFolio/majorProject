@@ -14,26 +14,26 @@ import retrofit2.http.Query
 interface ApiRoutes {
 
     @GET("hikes")
-    suspend fun getUserHikes(@Query("uid") uid: String): Response<List<HikeReq>>
+    suspend fun getUserHikes(@Query("uid") uid: String): Response<List<EncryptedHikeReq>>
 
     @POST("hikes")
     suspend fun postHike(@Body hikeData: EncryptedHikeReq): Response<Void>
 
     @PUT("hikes")
-    suspend fun updateHike(@Body hikeData: HikeReq): Response<Void>
+    suspend fun updateHike(@Body hikeData: EncryptedHikeReq): Response<Void>
 
     @DELETE("hikes/{pid}")
     suspend fun deleteHike(@Path("pid") pid: Int): Response<Void>
 
     @GET("users")
-    suspend fun getUser(@Query("uid") uid: String): Response<UserReq>
+    suspend fun getUser(@Query("uid") uid: String): Response<EncryptedUserReq>
 
     @POST("users")
-    suspend fun createUser(@Body userData: UserReq): Response<Void>
+    suspend fun createUser(@Body userData: EncryptedUserReq): Response<Void>
 
     @PUT("users")
-    suspend fun updateUser(@Body user: UserReq): Response<Void>
+    suspend fun updateUser(@Body user: EncryptedUserReq): Response<Void>
 
-    @PUT("start")
-    suspend fun startHike(@Body user: HikeReq): Response<Void>
+    @PUT("hikes/start")
+    suspend fun startHike(@Body user: EncryptedHikeReq): Response<Void>
 }

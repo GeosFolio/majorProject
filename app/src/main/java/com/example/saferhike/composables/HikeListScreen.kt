@@ -57,7 +57,7 @@ fun HikeListScreen(modifier: Modifier, navController: NavController, authViewMod
 
     LaunchedEffect(uid) {
         uid?.let {
-            hikeListViewModel.getUserHikes(apiService.apiService, uid,
+            hikeListViewModel.getUserHikes(apiService, uid,
                 onSuccess = { hikeList ->
                     hikes.value = hikeList
                     Log.d("Hike List", "Received List: $hikeList")

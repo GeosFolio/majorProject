@@ -92,7 +92,10 @@ class LocationService: Service() {
                 //count += 1
                 //if (count == 60) {
                     //count = 0
-                 hikeReq?.let { apiService.apiService.updateHike(it) }
+                 hikeReq?.let {
+                     val encryptedHikeReq = apiService.encryptHikeReq(it)
+                     apiService.apiService.updateHike(encryptedHikeReq)
+                 }
                 //}
                 for (client in clients) {
                     client.onLocationReceived(hikeReq!!, latLng)
@@ -108,7 +111,8 @@ class LocationService: Service() {
                 Log.d("LocationService", "not in progress, completed true, updating hike")
                 it.inProgress = false
                 it.completed = true
-                apiService.apiService.updateHike(it)
+                val encryptedHikeReq = apiService.encryptHikeReq(it)
+                apiService.apiService.updateHike(encryptedHikeReq)
             }
         }
         stopForeground(STOP_FOREGROUND_REMOVE)

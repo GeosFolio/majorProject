@@ -33,24 +33,26 @@ class AuthViewModel : ViewModel() {
         auth.signInWithEmailAndPassword(email,password)
             .addOnCompleteListener{task->
                 if (task.isSuccessful){
+                    Log.d("AuthViewModel", "Made it to first isSuccessful")
                     currentUser = auth.currentUser
                     viewModelScope.launch {
                         try {
                             val response = apiService.apiService.getUser(currentUser?.uid?:"")
                             if (response.isSuccessful) {
+                                Log.d("AuthViewModel", "Response received from getUser")
                                 val fetchedUser = response.body()
-                                if (fetchedUser != null) {
-                                    userData = fetchedUser
-                                    _authState.value = AuthState.Authenticated
-                                } else {
-                                    _authState.value = AuthState.Error("User data not found")
-                                }
+                                Log.d("AuthViewModel", "Attempting to decryptUserReq")
+                                val decryptedUser = apiService.decryptUserReq(fetchedUser!!, currentUser!!.uid)
+                                Log.d("AuthViewModel", "Decrypted user complete")
+                                userData = decryptedUser
+                                _authState.value = AuthState.Authenticated
                             } else {
                                 _authState.value =
                                     AuthState.Error("Failed to fetch user:" +
                                             "${response.code()} : ${response.message()}")
                             }
                         } catch (e: Exception) {
+                            Log.d("AuthViewModel", "Error: ${e.message}")
                             _authState.value = AuthState.Error("Error fetching user: ${e.message}")
                         }
                     }
@@ -81,16 +83,18 @@ class AuthViewModel : ViewModel() {
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
                     )
                         .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+                        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
                         .build()
                     keyGen.initialize(keyGenParameterSpec)
                     val keyPair = keyGen.genKeyPair()
+                    Log.d("AuthViewModel", "Key pair generated: $keyPair")
                     val publicKeyString = convertPublicKeyToString(keyPair.public)
                     Log.d("AuthViewModel", publicKeyString)
                     userData = UserReq(currentUser?.uid ?: "0", publicKeyString, fName, lName, contactsList)
                     viewModelScope.launch {
                         try {
-                            val response = apiService.apiService.createUser(userData)
+                            val encryptedUserReq = apiService.encryptUserReq(userData)
+                            val response = apiService.apiService.createUser(encryptedUserReq)
                             if (!response.isSuccessful) {
                                 _authState.value =
                                     AuthState.Error("Failed to post user: ${response.code()} : ${response.message()}")
@@ -108,11 +112,12 @@ class AuthViewModel : ViewModel() {
             }
     }
 
-    fun updateUser(userReq: UserReq, apiService: ApiRoutes) {
+    fun updateUser(userReq: UserReq, apiService: ApiService) {
         _authState.value = AuthState.Loading
         viewModelScope.launch {
             try {
-                val response = apiService.updateUser(userReq)
+                val encryptedUserReq = apiService.encryptUserReq(userReq)
+                val response = apiService.apiService.updateUser(encryptedUserReq)
                 if (response.isSuccessful) {
                     _authState.value = AuthState.Authenticated
                 } else {
