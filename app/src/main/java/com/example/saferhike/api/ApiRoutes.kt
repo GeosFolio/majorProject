@@ -17,7 +17,7 @@ interface ApiRoutes {
     suspend fun getUserHikes(@Query("uid") uid: String): Response<List<HikeReq>>
 
     @POST("hikes")
-    suspend fun postHike(@Body hikeData: HikeReq): Response<Void>
+    suspend fun postHike(@Body hikeData: EncryptedHikeReq): Response<Void>
 
     @PUT("hikes")
     suspend fun updateHike(@Body hikeData: HikeReq): Response<Void>

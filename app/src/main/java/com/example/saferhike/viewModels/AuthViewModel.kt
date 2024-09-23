@@ -1,7 +1,8 @@
 package com.example.saferhike.viewModels
-
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Base64
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,9 +20,9 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableLiveData<AuthState>()
     val authState: LiveData<AuthState> = _authState
     var currentUser: FirebaseUser? = null
-    var userData: UserReq = UserReq("0", null, "", "", emptyList())
+    var userData: UserReq = UserReq("0", "", "", "", emptyList())
 
-    fun login(email : String, password : String, apiService: ApiService){
+    fun login(email : String, password : String, apiService: ApiService) {
 
         if(email.isEmpty() || password.isEmpty()) {
             _authState.value = AuthState.Error("Email or Password missing")
@@ -76,7 +77,7 @@ class AuthViewModel : ViewModel() {
                         "AndroidKeyStore"
                     )
                     val keyGenParameterSpec = KeyGenParameterSpec.Builder(
-                        "SaferHikeKeyPair",
+                        currentUser?.uid?: "SaferHikeKey",
                         KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
                     )
                         .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
@@ -84,7 +85,9 @@ class AuthViewModel : ViewModel() {
                         .build()
                     keyGen.initialize(keyGenParameterSpec)
                     val keyPair = keyGen.genKeyPair()
-                    userData = UserReq(currentUser?.uid ?: "0", keyPair.public, fName, lName, contactsList)
+                    val publicKeyString = convertPublicKeyToString(keyPair.public)
+                    Log.d("AuthViewModel", publicKeyString)
+                    userData = UserReq(currentUser?.uid ?: "0", publicKeyString, fName, lName, contactsList)
                     viewModelScope.launch {
                         try {
                             val response = apiService.apiService.createUser(userData)
@@ -127,6 +130,10 @@ class AuthViewModel : ViewModel() {
         _authState.value = AuthState.Unauthenticated
         currentUser = null
     }
+
+    private fun convertPublicKeyToString(publicKey: PublicKey): String {
+        return Base64.encodeToString(publicKey.encoded, Base64.DEFAULT)
+    }
 }
 
 sealed class AuthState {
@@ -138,7 +145,7 @@ sealed class AuthState {
 
 data class UserReq(
     val uid: String,
-    val publicKey: PublicKey?,
+    val publicKey: String,
     var fName: String,
     var lName: String,
     var emergencyContacts: List<EmergencyContact>

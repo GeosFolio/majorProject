@@ -76,7 +76,8 @@ class HikeCreationViewModel(uid: String, hikeJson: String?) : ViewModel() {
                 val response: Response<Void> = if (_hikeReq.value.pid != 0) {
                     apiService.apiService.updateHike(_hikeReq.value)
                 } else {
-                    apiService.apiService.postHike(_hikeReq.value)
+                    val encryptedHikeReq = apiService.encryptHikeReq(_hikeReq.value)
+                    apiService.apiService.postHike(encryptedHikeReq)
                 }
                 if (response.isSuccessful) {
                     onSuccess()

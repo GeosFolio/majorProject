@@ -9,8 +9,11 @@ import kotlinx.parcelize.Parcelize
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
+import java.security.KeyFactory
+import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 
 class ApiService {
@@ -22,6 +25,27 @@ class ApiService {
     }
     val apiService: ApiRoutes by lazy {
         _retrofit.create(ApiRoutes::class.java)
+    }
+    private val _flaskPublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnw/JsP/8vVvFN2+nmk4b" +
+            "kgMpGoe2fiQfGqhhS95aiqZ3mvDqlzTPH3Rq9f+vqVSGV8PbUn5kloFfV/GXDmfQ" +
+            "TvOKQOrU96oQKmJ3OJSGHBcB8hg1gXTtl6Jqa53GqKEDGpPmtR4JbZTkwtBP6cmx" +
+            "Yhc5o2TbZLOzHZl+k0NTqaubyu4ifF6QrjRrfNsZobMQwMt7FQOmWdEdk4y4Ji4B" +
+            "H8AXgWbkwvOrWQi7FUlpEtQpQ3u4e6J4ldsfoj9vjGUtlajk1swtu5S0MtUzrUDM" +
+            "2O1wRvjNKwCKHkPWstH8Mf2f2qmjyG/DUM+MQFPtwqhX7Oh+PZ64FfX0p+3L8L57" +
+            "kQIDAQAB"
+
+
+    private fun getFlaskPublicKey(): PublicKey {
+        val decodedKey = Base64.decode(_flaskPublicKey, Base64.DEFAULT)
+        val keySpec = X509EncodedKeySpec(decodedKey)
+        val keyFactory = KeyFactory.getInstance("RSA")
+        return keyFactory.generatePublic(keySpec)
+    }
+
+    private fun getPrivateKey(alias: String): PrivateKey? {
+        val keyStore = KeyStore.getInstance("AndroidKeyStore")
+        keyStore.load(null)
+        return keyStore.getKey(alias, null) as? PrivateKey
     }
     // Encrypts a given string using the provided public key
     private fun encryptData(data: String, publicKey: PublicKey): String {
@@ -38,7 +62,8 @@ class ApiService {
         return String(cipher.doFinal(encryptedBytes))
     }
     // Encrypts a HikeReq object to EncryptedHikeReq using the provided public key
-    fun encryptHikeReq(hikeReq: HikeReq, publicKey: PublicKey): EncryptedHikeReq {
+    fun encryptHikeReq(hikeReq: HikeReq): EncryptedHikeReq {
+        val publicKey = getFlaskPublicKey()
         val encryptedLat = encryptData(hikeReq.lat.toString(), publicKey)
         val encryptedLng = encryptData(hikeReq.lng.toString(), publicKey)
         val encryptedMarkers = hikeReq.markers.map { marker ->
@@ -70,7 +95,8 @@ class ApiService {
         )
     }
     // Decrypts an EncryptedHikeReq object back to HikeReq using the provided private key
-    fun decryptHikeReq(encryptedHikeReq: EncryptedHikeReq, privateKey: PrivateKey): HikeReq {
+    fun decryptHikeReq(encryptedHikeReq: EncryptedHikeReq, alias: String): HikeReq {
+        val privateKey = getPrivateKey(alias) ?: throw IllegalStateException("Private Key Not Found")
         val decryptedLat = decryptData(encryptedHikeReq.lat, privateKey).toDouble()
         val decryptedLng = decryptData(encryptedHikeReq.lng, privateKey).toDouble()
         val decryptedMarkers = encryptedHikeReq.markers.map { marker ->
@@ -102,7 +128,6 @@ class ApiService {
         )
     }
 }
-
 @Parcelize
 data class EncryptedHikeReq(
     val pid: Int,
