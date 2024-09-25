@@ -196,6 +196,16 @@ class ApiService {
             emergencyContacts = decryptedEmergencyContacts
         )
     }
+
+    fun decryptPath(encryptedPath: List<EncryptedLatLng>, alias: String): List<LatLng> {
+        val privateKey = getPrivateKey(alias)
+        return encryptedPath.map {
+            LatLng(
+                decryptData(it.latitude, privateKey).toDouble(),
+                decryptData(it.longitude, privateKey).toDouble()
+            )
+        }
+    }
 }
 @Parcelize
 data class EncryptedHikeReq(

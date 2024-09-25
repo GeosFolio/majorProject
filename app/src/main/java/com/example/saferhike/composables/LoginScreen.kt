@@ -37,7 +37,7 @@ import com.example.saferhike.viewModels.AuthState
 import com.example.saferhike.viewModels.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavController,
+fun LoginScreen(navController: NavController,
                 authViewModel: AuthViewModel, apiService: ApiService) {
     var email by remember {
         mutableStateOf("")

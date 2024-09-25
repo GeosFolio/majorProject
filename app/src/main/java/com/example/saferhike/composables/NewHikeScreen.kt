@@ -171,7 +171,7 @@ fun NewHikeScreen(
                 onClick = {
                     viewModel.saveHike(
                         apiService = apiService,
-                        onSuccess = { navController.navigate("hikes") },
+                        onSuccess = { navController.popBackStack() },
                         onError = { e ->
                             Toast.makeText(context, e, Toast.LENGTH_LONG).show()
                             result = e

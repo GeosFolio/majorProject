@@ -42,7 +42,6 @@ import com.example.saferhike.viewModels.EmergencyContact
 
 @Composable
 fun SignupScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
     authViewModel: AuthViewModel,
     apiService: ApiService
@@ -66,7 +65,7 @@ fun SignupScreen(
         }
     }
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .padding(horizontal = 16.dp),

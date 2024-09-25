@@ -34,7 +34,6 @@ import com.example.saferhike.viewModels.UserReq
 
 @Composable
 fun EditAccountScreen(
-    modifier: Modifier = Modifier,
     navController: NavController,
     authViewModel: AuthViewModel,
     apiService: ApiService
@@ -139,7 +138,7 @@ fun EditAccountScreen(
                 authViewModel.userData.lName = lName
                 authViewModel.userData.emergencyContacts = emergencyContacts.toList()
                 authViewModel.updateUser(authViewModel.userData, apiService)
-                navController.navigate("home")
+                navController.popBackStack()
             }
         ) {
             Text(text = "Save Changes")

@@ -29,7 +29,7 @@ import com.example.saferhike.viewModels.AuthViewModel
 import com.google.firebase.auth.FirebaseUser
 
 @Composable
-fun HomeScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,
+fun HomeScreen(navController: NavController, authViewModel: AuthViewModel,
                apiService: ApiService) {
     val authState = authViewModel.authState.observeAsState()
     val user: FirebaseUser? = authViewModel.currentUser

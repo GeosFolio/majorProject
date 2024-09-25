@@ -1,14 +1,7 @@
 package com.example.saferhike.composables
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.content.pm.PackageManager
-import android.location.Location
-import android.os.IBinder
-import android.util.Log
+import android.app.Application
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -16,26 +9,31 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.saferhike.viewModels.AuthViewModel
-import com.example.saferhike.tracking.LocationService
+import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.HikeReq
+import com.example.saferhike.viewModels.TrackingViewModel
+import com.example.saferhike.viewModels.TrackingViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -47,134 +45,130 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrackingScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,
-                   hikeJson: String?) {
+fun TrackingScreen(
+    navController: NavController,
+    hikeJson: String?,
+    viewModel: TrackingViewModel = viewModel(factory = TrackingViewModelFactory(LocalContext.current.applicationContext as Application, hikeJson))
+) {
     val context = LocalContext.current
-    var permissionGranted by remember { mutableStateOf(false) }
-    var traveledPath by remember { mutableStateOf<List<LatLng>>(emptyList()) }
-    val gson = Gson()
-    var hike = hikeJson?.let { gson.fromJson(it, HikeReq::class.java) }
+    val permissionGranted by viewModel.permissionGranted
+    val traveledPath by viewModel.traveledPath
+    val hike = viewModel.hike.value
+
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(hike?.lat?: 0.0, hike?.lng?: 0.0), 12f)
+        position = CameraPosition.fromLatLngZoom(LatLng(hike.lat, hike.lng), 12f)
     }
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-        permissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        viewModel.permissionGranted.value =
+            permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
     }
+    // Request permissions
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(
-                context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionGranted = true
-        } else {
+        viewModel.checkPermissions(context)
+        if (!permissionGranted) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                )
             )
         }
     }
+
     if (permissionGranted) {
-        hike?.let {
+        hike.let {
             if (!it.inProgress) {
-                Log.d("TrackingScreen", "Starting Hike Tracking of Hike: $it")
-                startHikeTracking(context, it)
+                viewModel.startHikeTracking(context, it)
             }
         }
-        val serviceConnection = rememberUpdatedState<ServiceConnection>(object : ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
-                val locationService = (binder as LocationService.LocationBinder).getService()
-                locationService.registerCallback(object : LocationCallback {
-                    override fun onLocationReceived(hikeReq: HikeReq, location: LatLng) {
-                        hike = hikeReq
-                        traveledPath = hikeReq.traveledPath
-                        CoroutineScope(Dispatchers.Main).launch {
-                            cameraPositionState.animate(CameraUpdateFactory.newLatLng(location))
+        DisposableEffect(Unit) {
+            viewModel.bindService(context)
+            onDispose {
+                viewModel.unbindService(context)
+            }
+        }
+        LaunchedEffect(traveledPath) {
+            if (traveledPath.isNotEmpty()) {
+                val latestLocation = traveledPath.last()
+                cameraPositionState.animate(
+                    CameraUpdateFactory
+                        .newCameraPosition(
+                            CameraPosition.fromLatLngZoom(latestLocation, 15f)
+                        )
+                )
+            }
+        }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(text = "Current Hike: ${hike.name}") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            // Navigate back to the homepage
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
                         }
                     }
-                })
+                )
             }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                // Handle disconnection
-            }
-        })
-        val intent = Intent(context, LocationService::class.java)
-        context.bindService(intent, serviceConnection.value, Context.BIND_AUTO_CREATE)
-        DisposableEffect(Unit) {
-            onDispose {
-                context.unbindService(serviceConnection.value)
-            }
-        }
-        Column (
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Current Hike: ${hike?.name?: "No hike found"}")
-            Spacer(modifier = Modifier.height(16.dp))
-            GoogleMap(
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = permissionGranted),
-                uiSettings = MapUiSettings(zoomControlsEnabled = true)
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                hike?.markers?.forEach { marker ->
-                    Marker(
-                        state = MarkerState(position = LatLng(marker.lat, marker.lng)),
-                        title = marker.title,
-                        snippet = marker.description
+                Spacer(modifier = Modifier.height(16.dp))
+                GoogleMap(
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = true),
+                    uiSettings = MapUiSettings(zoomControlsEnabled = true),
+                    modifier = Modifier
+                        .weight(1f) // Make the map fill available space but not take all of it
+                ) {
+                    hike.markers.forEach { marker ->
+                        Marker(
+                            state = MarkerState(position = LatLng(marker.lat, marker.lng)),
+                            title = marker.title,
+                            snippet = marker.description
+                        )
+                    }
+                    Polyline(
+                        points = hike.markers.map { LatLng(it.lat, it.lng) },
+                        color = Color.Blue,
+                        width = 5f
+                    )
+                    Polyline(
+                        points = traveledPath,
+                        color = Color.Green,
+                        width = 5f
                     )
                 }
-                Polyline(
-                    points = hike?.markers?.map { LatLng(it.lat, it.lng) }?: emptyList(),
-                    color = Color.Blue,
-                    width = 5f
-                )
-                Polyline(
-                    points = traveledPath,
-                    color = Color.Green,
-                    width = 5f
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                stopHikeTracking(context)
-            }) {
-                Text(text = "Complete Hike")
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    viewModel.stopHikeTracking(context)
+                    navController.navigate("home")
+                }) {
+                    Text(text = "Complete Hike")
+                }
+                Spacer(modifier = Modifier.height(16.dp)) // Add some space below the button
             }
         }
     } else {
         Text("Location access denied. Please grant location access.")
     }
-}
-
-fun startHikeTracking(context: Context, hikeReq: HikeReq) {
-    val intent = Intent(context, LocationService::class.java).apply {
-        action = LocationService.ACTION_START
-        putExtra("HIKE", hikeReq)
-    }
-    context.startForegroundService(intent)
-}
-
-fun stopHikeTracking(context: Context) {
-    val intent = Intent(context, LocationService::class.java).apply {
-        action = LocationService.ACTION_STOP
-    }
-    context.startForegroundService(intent)
 }

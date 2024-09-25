@@ -14,7 +14,6 @@ import com.example.saferhike.composables.LoginScreen
 import com.example.saferhike.composables.EditAccountScreen
 import com.example.saferhike.composables.SignupScreen
 import com.example.saferhike.composables.TrackingScreen
-import com.example.saferhike.viewModels.HikeListViewModel
 
 @Composable
 fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
@@ -23,15 +22,15 @@ fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
     NavHost(navController = navController, startDestination = "login", builder = {
         composable("login") {
             // Done
-            LoginScreen(modifier, navController, authViewModel, apiService)
+            LoginScreen(navController, authViewModel, apiService)
         }
         composable("signup") {
             // Done
-            SignupScreen(modifier, navController, authViewModel, apiService)
+            SignupScreen(navController, authViewModel, apiService)
         }
         composable("home") {
             // Done
-            HomeScreen(modifier, navController, authViewModel, apiService)
+            HomeScreen(navController, authViewModel, apiService)
         }
         composable("newHike/{hikeJson}") {
             val hikeJson = it.arguments?.getString("hikeJson")
@@ -43,16 +42,16 @@ fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
         }
         composable("hikes") {
             // Done
-            HikeListScreen(modifier, navController, authViewModel, apiService)
+            HikeListScreen(navController, authViewModel, apiService)
         }
         composable("trackHike/{hikeJson}") {
             // Done
             val hikeJson = it.arguments?.getString("hikeJson")
-            TrackingScreen(modifier, navController, authViewModel, hikeJson)
+            TrackingScreen(navController, hikeJson)
         }
         composable("edit") {
             // Done
-            EditAccountScreen(modifier, navController, authViewModel, apiService)
+            EditAccountScreen(navController, authViewModel, apiService)
         }
     })
 }

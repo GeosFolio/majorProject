@@ -76,7 +76,7 @@ class LocationService: Service() {
             .setOngoing(true)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        //var count = 59
+        var count = 5
 
         locationClient
             .getLocationUpdates(10000L)
@@ -89,16 +89,18 @@ class LocationService: Service() {
                     "Location: (${latLng})"
                 )
                 notificationManager.notify(1, updatedNotification.build())
-                //count += 1
-                //if (count == 60) {
-                    //count = 0
-                 hikeReq?.let {
-                     val encryptedHikeReq = apiService.encryptHikeReq(it)
-                     apiService.apiService.updateHike(encryptedHikeReq)
-                 }
-                //}
+                count += 1
+                if (count == 6) {
+                    count = 0
+                    hikeReq?.let {
+                        val encryptedHikeReq = apiService.encryptHikeReq(it)
+                        apiService.apiService.updateHike(encryptedHikeReq)
+                    }
+                }
                 for (client in clients) {
-                    client.onLocationReceived(hikeReq!!, latLng)
+                    hikeReq?.let {
+                        client.onLocationReceived(it, latLng)
+                    }
                 }
             }
             .launchIn(serviceScope)

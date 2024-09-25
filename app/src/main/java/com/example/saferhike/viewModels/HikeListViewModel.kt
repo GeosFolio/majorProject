@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiRoutes
 import com.example.saferhike.api.ApiService
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
@@ -37,12 +38,14 @@ class HikeListViewModel() : ViewModel() {
             } catch (e: HttpException) {
                 onError("HTTP error: ${e.message}")
             } catch (e: IOException) {
+                Log.d("HikeListViewModel", "${e.message}")
                 onError("Network error: ${e.message}")
             } catch (e: Exception) {
                 onError("Unexpected error: ${e.message}")
             }
         }
     }
+    
     fun delete(apiService: ApiRoutes, hikeReq: HikeReq,
                onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
@@ -84,4 +87,24 @@ class HikeListViewModel() : ViewModel() {
             }
         }
     }
+
+    fun getHikePath(apiService: ApiService, pid: Int, uid: String,
+                    onSuccess: (List<LatLng>) -> Unit,
+                    onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.apiService.getHikePath(pid)
+                if (response.isSuccessful) {
+                    val encryptedPath = response.body()
+                    encryptedPath?.let {
+                        val path = apiService.decryptPath(it, uid)
+                        onSuccess(path)
+                    }
+                }
+            } catch (e: Exception) {
+                onError("${e.message}")
+            }
+        }
+    }
+
 }

@@ -16,18 +16,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -44,8 +48,9 @@ import com.example.saferhike.viewModels.HikeListViewModel
 import com.example.saferhike.viewModels.HikeReq
 import com.google.gson.Gson
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HikeListScreen(modifier: Modifier, navController: NavController, authViewModel: AuthViewModel,
+fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
                apiService: ApiService, hikeListViewModel: HikeListViewModel = HikeListViewModel()
 ) {
     Log.d("HikeListScreen", "Creating Hike List Screen")
@@ -60,7 +65,7 @@ fun HikeListScreen(modifier: Modifier, navController: NavController, authViewMod
             hikeListViewModel.getUserHikes(apiService, uid,
                 onSuccess = { hikeList ->
                     hikes.value = hikeList
-                    Log.d("Hike List", "Received List: $hikeList")
+                    Log.d("HikeListScreen", "Received List: $hikeList")
                     inProgress.value = hikeList.find { it.inProgress }
                     Log.d("HikeListScreen", "Hike In Progress: ${inProgress.value}")
                 },
@@ -70,24 +75,46 @@ fun HikeListScreen(modifier: Modifier, navController: NavController, authViewMod
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        hikes.value?.let { hikeList ->
-            items(hikeList) { hike ->
-                Log.d("HikeListScreen", "Creating Expandable Hike Card with: $hike")
-                ExpandableHikeCard(
-                    hike,
-                    navController,
-                    hikeListViewModel,
-                    apiService,
-                    context,
-                    inProgress.value,
-                    onDelete = { h ->
-                        hikes.value = hikes.value?.filterNot { t -> t.pid == h.pid }
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Hike List") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Navigate back to the homepage
+                        navController.popBackStack()
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
                     }
-                )
+                }
+            )
+        },
+        content = { paddingValues ->
+            LazyColumn(modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)) {
+                hikes.value?.let { hikeList ->
+                    items(hikeList) { hike ->
+                        Log.d("HikeListScreen", "Creating Expandable Hike Card with: $hike")
+                        ExpandableHikeCard(
+                            hike,
+                            navController,
+                            hikeListViewModel,
+                            apiService,
+                            context,
+                            inProgress.value,
+                            onDelete = { h ->
+                                hikes.value = hikes.value?.filterNot { t -> t.pid == h.pid }
+                            }
+                        )
+                    }
+                }
             }
         }
-    }
+    )
 }
 
 @Composable
@@ -145,6 +172,14 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                     }
                     Button(onClick = {
                         if (inProgressHike != null && inProgressHike.pid == hike.pid) {
+                            hikeListViewModel.getHikePath(apiService, hike.pid,
+                                hike.uid,
+                                onSuccess = { path ->
+                                    hike.traveledPath = path
+                                },
+                                onError = { error ->
+                                    Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                                })
                             val hikeJson = gson.toJson(hike)
                             navController.navigate("trackHike/$hikeJson")
                         } else {
