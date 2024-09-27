@@ -100,8 +100,11 @@ class HikeListViewModel() : ViewModel() {
                         val path = apiService.decryptPath(it, uid)
                         onSuccess(path)
                     }
+                } else {
+                    Log.d("HikeListViewModel", "Unsuccessful response: ${response.message()}")
                 }
             } catch (e: Exception) {
+                Log.d("HikeListViewModel", "Error: ${e.message}")
                 onError("${e.message}")
             }
         }

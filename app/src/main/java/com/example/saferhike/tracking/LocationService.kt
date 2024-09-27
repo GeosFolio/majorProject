@@ -51,6 +51,7 @@ class LocationService: Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("LocationService", "on start hit")
+        Log.d("LocationService", "${intent?.action}")
         when(intent?.action) {
             ACTION_START -> start(intent)
             ACTION_STOP -> stop()
@@ -63,10 +64,16 @@ class LocationService: Service() {
             Log.d("LocationService", "Hike Req Null: Stopping Service")
             stop()
         }
-        Log.d("LocationService", "Updating Hike Req: in progress, not completed, empty path")
-        hikeReq?.inProgress = true
-        hikeReq?.completed = false
-        hikeReq?.traveledPath = emptyList()
+        hikeReq?.let {
+            if (!it.inProgress) {
+                Log.d("LocationService", "Updating Hike Req: in progress," +
+                        "not completed, empty path")
+                it.inProgress = true
+                it.completed = false
+                it.traveledPath = emptyList()
+            }
+        }
+
 
         val notification = NotificationCompat.Builder(this, "location")
             .setContentTitle("Tracking hike: ${hikeReq?.name?: "Hike not found"}")

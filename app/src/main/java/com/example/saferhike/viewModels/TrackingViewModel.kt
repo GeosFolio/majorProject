@@ -8,17 +8,20 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiService
 import com.example.saferhike.composables.LocationCallback
 import com.example.saferhike.tracking.LocationService
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
-class TrackingViewModel(application: Application, hikeJson: String?) : AndroidViewModel(application) {
+class TrackingViewModel(application: Application, hikeJson: String, val apiService: ApiService) : AndroidViewModel(application) {
     val permissionGranted = mutableStateOf(false)
     val traveledPath = mutableStateOf<List<LatLng>>(emptyList())
     private val gson = Gson()
@@ -77,7 +80,16 @@ class TrackingViewModel(application: Application, hikeJson: String?) : AndroidVi
         val intent = Intent(context, LocationService::class.java).apply {
             action = LocationService.ACTION_STOP
         }
-        context.startForegroundService(intent)
+        context.stopService(intent)
+        viewModelScope.launch {
+            hike.value.let {
+                Log.d("LocationService", "not in progress, completed true, updating hike")
+                it.inProgress = false
+                it.completed = true
+                val encryptedHikeReq = apiService.encryptHikeReq(it)
+                apiService.apiService.updateHike(encryptedHikeReq)
+            }
+        }
     }
 
 }

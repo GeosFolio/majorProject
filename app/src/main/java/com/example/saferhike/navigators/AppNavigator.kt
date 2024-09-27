@@ -46,8 +46,8 @@ fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
         }
         composable("trackHike/{hikeJson}") {
             // Done
-            val hikeJson = it.arguments?.getString("hikeJson")
-            TrackingScreen(navController, hikeJson)
+            val hikeJson = it.arguments?.getString("hikeJson")?: ""
+            TrackingScreen(navController, hikeJson, apiService)
         }
         composable("edit") {
             // Done

@@ -7,11 +7,12 @@ import com.example.saferhike.api.ApiService
 
 class TrackingViewModelFactory(
     private val application: Application,
-    private val hikeJson: String?
+    private val hikeJson: String,
+    private val apiService: ApiService
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TrackingViewModel::class.java)) {
-            return TrackingViewModel(application, hikeJson) as T
+            return TrackingViewModel(application, hikeJson, apiService) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -60,7 +60,7 @@ fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
     val context = LocalContext.current
     val inProgress = remember { mutableStateOf<HikeReq?>(null) }
 
-    LaunchedEffect(uid) {
+    LaunchedEffect(Unit) {
         uid?.let {
             hikeListViewModel.getUserHikes(apiService, uid,
                 onSuccess = { hikeList ->

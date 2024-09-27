@@ -2,6 +2,7 @@ package com.example.saferhike.composables
 
 import android.Manifest
 import android.app.Application
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -31,13 +32,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saferhike.api.ApiService
-import com.example.saferhike.viewModels.HikeReq
 import com.example.saferhike.viewModels.TrackingViewModel
 import com.example.saferhike.viewModels.TrackingViewModelFactory
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.gson.Gson
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -50,8 +49,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun TrackingScreen(
     navController: NavController,
-    hikeJson: String?,
-    viewModel: TrackingViewModel = viewModel(factory = TrackingViewModelFactory(LocalContext.current.applicationContext as Application, hikeJson))
+    hikeJson: String,
+    apiService: ApiService,
+    viewModel: TrackingViewModel = viewModel(factory = TrackingViewModelFactory(LocalContext.current.applicationContext as Application, hikeJson, apiService))
 ) {
     val context = LocalContext.current
     val permissionGranted by viewModel.permissionGranted
@@ -83,10 +83,9 @@ fun TrackingScreen(
     }
 
     if (permissionGranted) {
-        hike.let {
-            if (!it.inProgress) {
-                viewModel.startHikeTracking(context, it)
-            }
+        LaunchedEffect(Unit) {
+            Log.d("TrackingScreen", "Start Hike Tracking sent")
+            viewModel.startHikeTracking(context, hike)
         }
         DisposableEffect(Unit) {
             viewModel.bindService(context)
@@ -161,7 +160,7 @@ fun TrackingScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = {
                     viewModel.stopHikeTracking(context)
-                    navController.navigate("home")
+                    navController.popBackStack()
                 }) {
                     Text(text = "Complete Hike")
                 }
