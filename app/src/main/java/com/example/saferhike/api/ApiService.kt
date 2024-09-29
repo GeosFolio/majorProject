@@ -11,8 +11,6 @@ import com.google.android.gms.maps.model.LatLng
 import kotlinx.parcelize.Parcelize
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyStore
 import java.security.PrivateKey
@@ -99,7 +97,7 @@ class ApiService {
             supplies = encryptData(hikeReq.supplies, publicKey),
             lat = encryptedLat,
             lng = encryptedLng,
-            expectedReturnTime = encryptData(hikeReq.expectedReturnTime, publicKey),
+            duration = encryptData(hikeReq.duration, publicKey),
             markers = encryptedMarkers,
             traveledPath = encryptedTraveledPath,
             completed = hikeReq.completed,
@@ -130,7 +128,7 @@ class ApiService {
             )
         }
         Log.d("ApiService", "Returning HikeReq")
-        Log.d("ApiService", encryptedHikeReq.expectedReturnTime)
+        Log.d("ApiService", encryptedHikeReq.duration)
         return HikeReq(
             pid = encryptedHikeReq.pid,
             uid = decryptData(encryptedHikeReq.uid, privateKey),
@@ -138,7 +136,7 @@ class ApiService {
             supplies = decryptData(encryptedHikeReq.supplies, privateKey),
             lat = decryptedLat,
             lng = decryptedLng,
-            expectedReturnTime = decryptData(encryptedHikeReq.expectedReturnTime, privateKey),
+            duration = decryptData(encryptedHikeReq.duration, privateKey),
             markers = decryptedMarkers,
             traveledPath = decryptedTraveledPath,
             completed = encryptedHikeReq.completed,
@@ -215,7 +213,7 @@ data class EncryptedHikeReq(
     val supplies: String, // Encrypted Supplies
     val lat: String, // Encrypted Latitude as String
     val lng: String, // Encrypted Longitude as String
-    val expectedReturnTime: String, // Encrypted Expected Return Time
+    val duration: String, // Encrypted Expected Return Time
     val markers: List<EncryptedHikeMarker>, // List of Encrypted Markers
     val traveledPath: List<EncryptedLatLng>, // List of Encrypted LatLng for Traveled Path
     var completed: Boolean = false,

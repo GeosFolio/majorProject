@@ -1,6 +1,5 @@
-package com.example.saferhike.composables
+package com.example.saferhike.tracking
 
-import android.location.Location
 import com.example.saferhike.viewModels.HikeReq
 import com.google.android.gms.maps.model.LatLng
 

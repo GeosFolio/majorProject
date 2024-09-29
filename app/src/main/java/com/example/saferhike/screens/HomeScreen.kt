@@ -1,4 +1,4 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,33 +17,20 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.AuthState
 import com.example.saferhike.viewModels.AuthViewModel
 import com.google.firebase.auth.FirebaseUser
 
 @Composable
-fun HomeScreen(navController: NavController, authViewModel: AuthViewModel,
-               apiService: ApiService) {
+fun HomeScreen(navController: NavController, authViewModel: AuthViewModel) {
     val authState = authViewModel.authState.observeAsState()
     val user: FirebaseUser? = authViewModel.currentUser
     val userData = authViewModel.userData
-
-    val distance by remember {
-        mutableIntStateOf(0)
-    }
-    val hikes by remember {
-        mutableIntStateOf(0)
-    }
-    val elevation by remember {
-        mutableIntStateOf(0)
-    }
     val first by remember {
         mutableStateOf(userData.fName)
     }
@@ -78,12 +65,6 @@ fun HomeScreen(navController: NavController, authViewModel: AuthViewModel,
                 Text(text = "View Hikes")
             }
         }
-        Spacer(modifier = Modifier.height(64.dp))
-        Text(text = "Total Hikes Completed: $hikes", fontSize = 18.sp)
-        Spacer(modifier = Modifier.height(18.dp))
-        Text(text = "Distance Travelled: $distance km", fontSize = 18.sp)
-        Spacer(modifier = Modifier.height(18.dp))
-        Text(text = "Elevation Gained: $elevation km", fontSize = 18.sp)
         Spacer(modifier = Modifier.height(64.dp))
         Row (
             modifier = Modifier.fillMaxWidth(),

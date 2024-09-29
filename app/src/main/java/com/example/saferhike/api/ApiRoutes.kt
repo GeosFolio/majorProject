@@ -35,7 +35,7 @@ interface ApiRoutes {
     suspend fun updateUser(@Body user: EncryptedUserReq): Response<Void>
 
     @PUT("hikes/start")
-    suspend fun startHike(@Body user: EncryptedHikeReq): Response<Void>
+    suspend fun startHike(@Body hike: EncryptedHikeReq): Response<Void>
 
     @GET("hikes/{pid}/paths")
     suspend fun getHikePath(@Path("pid") pid: Int): Response<List<EncryptedLatLng>>

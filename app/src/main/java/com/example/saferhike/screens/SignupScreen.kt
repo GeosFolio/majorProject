@@ -1,5 +1,7 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,9 +16,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,51 +28,80 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.saferhike.api.ApiService
+import com.example.saferhike.viewModels.AuthState
 import com.example.saferhike.viewModels.AuthViewModel
 import com.example.saferhike.viewModels.EmergencyContact
-import com.example.saferhike.viewModels.UserReq
 
 @Composable
-fun EditAccountScreen(
+fun SignupScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     apiService: ApiService
 ) {
-    val userData = authViewModel.userData
-    var fName by remember { mutableStateOf(userData.fName) }
-    var lName by remember { mutableStateOf(userData.lName) }
-    // Use SnapshotStateList for emergency contacts
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var fName by remember { mutableStateOf("") }
+    var lName by remember { mutableStateOf("") }
     val emergencyContacts = remember { SnapshotStateList<EmergencyContact>() }
-    LaunchedEffect(Unit) {
-        emergencyContacts.addAll(userData.emergencyContacts)
+    val authState = authViewModel.authState.observeAsState()
+    val context = LocalContext.current
+    LaunchedEffect(authState.value) {
+        when (authState.value) {
+            is AuthState.Authenticated -> navController.navigate("home")
+            is AuthState.Error -> Toast.makeText(
+                context,
+                (authState.value as AuthState.Error).message,
+                Toast.LENGTH_SHORT
+            ).show()
+            else -> Unit
+        }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.White)
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Edit Account", fontSize = 32.sp)
+        // Fixed header section
+        Text(text = "SaferHike", fontSize = 32.sp)
+        Spacer(modifier = Modifier.height(8.dp))
 
+        // Form fields
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text(text = "Email") }
+        )
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text(text = "Password") },
+            visualTransformation = PasswordVisualTransformation()
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         OutlinedTextField(
             value = fName,
             onValueChange = { fName = it },
-            label = { Text("First Name") }
+            label = { Text(text = "First Name") }
         )
-
         OutlinedTextField(
             value = lName,
             onValueChange = { lName = it },
-            label = { Text("Last Name") }
+            label = { Text(text = "Last Name") }
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Emergency Contacts", fontSize = 18.sp)
+
+        // Scrollable Emergency Contacts Section
+        Text(text = "Emergency Contacts", fontSize = 20.sp, color = Color.Gray)
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Use LazyColumn for emergency contacts
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -131,17 +164,31 @@ fun EditAccountScreen(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                authViewModel.userData.fName = fName
-                authViewModel.userData.lName = lName
-                authViewModel.userData.emergencyContacts = emergencyContacts.toList()
-                authViewModel.updateUser(authViewModel.userData, apiService)
-                navController.popBackStack()
+                val contactList = emergencyContacts.toList()
+                if (validateContacts(contactList)) {
+                    authViewModel.signup(email, password, fName, lName, contactList, apiService)
+                } else {
+                    Toast.makeText(context, "Need at least 1 email or phone number",
+                        Toast.LENGTH_LONG).show()
+                }
+            },
+            enabled = authState.value != AuthState.Loading
+                    || authState.value != AuthState.Authenticated
+        ) {
+            Text(text = "Signup")
+        }
+        TextButton(
+            onClick = {
+                navController.navigate("login")
             }
         ) {
-            Text(text = "Save Changes")
+            Text(text = "Already have an account?")
         }
     }
+}
+
+fun validateContacts(contacts: List<EmergencyContact>): Boolean {
+    return contacts.all { it.email != "" || it.phoneNumber != "" }
 }

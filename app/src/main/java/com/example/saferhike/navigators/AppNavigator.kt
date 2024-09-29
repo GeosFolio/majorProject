@@ -1,22 +1,22 @@
 package com.example.saferhike.navigators
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.AuthViewModel
-import com.example.saferhike.composables.HikeListScreen
-import com.example.saferhike.composables.NewHikeScreen
-import com.example.saferhike.composables.HomeScreen
-import com.example.saferhike.composables.LoginScreen
-import com.example.saferhike.composables.EditAccountScreen
-import com.example.saferhike.composables.SignupScreen
-import com.example.saferhike.composables.TrackingScreen
+import com.example.saferhike.screens.HikeListScreen
+import com.example.saferhike.screens.NewHikeScreen
+import com.example.saferhike.screens.HomeScreen
+import com.example.saferhike.screens.LoginScreen
+import com.example.saferhike.screens.EditAccountScreen
+import com.example.saferhike.screens.SignupScreen
+import com.example.saferhike.screens.TrackingScreen
 
 @Composable
-fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
+fun AppNavigator(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val apiService = ApiService()
     NavHost(navController = navController, startDestination = "login", builder = {
@@ -30,7 +30,7 @@ fun AppNavigator(modifier: Modifier = Modifier, authViewModel: AuthViewModel) {
         }
         composable("home") {
             // Done
-            HomeScreen(navController, authViewModel, apiService)
+            HomeScreen(navController, authViewModel)
         }
         composable("newHike/{hikeJson}") {
             val hikeJson = it.arguments?.getString("hikeJson")

@@ -1,4 +1,4 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image

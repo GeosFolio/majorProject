@@ -1,4 +1,4 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
 import android.content.Context
 import android.util.Log
@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.AuthViewModel
@@ -51,7 +52,7 @@ import com.google.gson.Gson
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
-               apiService: ApiService, hikeListViewModel: HikeListViewModel = HikeListViewModel()
+               apiService: ApiService, hikeListViewModel: HikeListViewModel = viewModel()
 ) {
     Log.d("HikeListScreen", "Creating Hike List Screen")
     val currentUser = authViewModel.currentUser
@@ -75,7 +76,7 @@ fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
         }
     }
 
-    Scaffold(
+    Scaffold (
         topBar = {
             TopAppBar(title = { Text("Hike List") },
                 navigationIcon = {
@@ -91,9 +92,9 @@ fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
                     }
                 }
             )
-        },
-        content = { paddingValues ->
-            LazyColumn(modifier = Modifier
+        }
+    ) { paddingValues ->
+        LazyColumn(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)) {
                 hikes.value?.let { hikeList ->
@@ -112,9 +113,9 @@ fun HikeListScreen(navController: NavController, authViewModel: AuthViewModel,
                         )
                     }
                 }
-            }
         }
-    )
+    }
+
 }
 
 @Composable
@@ -158,7 +159,7 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
             if (isExpanded) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = "Supplies: ${hike.supplies}")
-                Text(text = "Last Completion Time: ${hike.expectedReturnTime}")
+                Text(text = "Last Completion Time: ${hike.duration}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -175,13 +176,15 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                             hikeListViewModel.getHikePath(apiService, hike.pid,
                                 hike.uid,
                                 onSuccess = { path ->
+                                    Log.d("HikeListScreen", "Path Received: $path")
                                     hike.traveledPath = path
+                                    Log.d("HikeListScreen", "Passing hike to tracking: $hike")
+                                    val hikeJson = gson.toJson(hike)
+                                    navController.navigate("trackHike/$hikeJson")
                                 },
                                 onError = { error ->
                                     Toast.makeText(context, error, Toast.LENGTH_LONG).show()
                                 })
-                            val hikeJson = gson.toJson(hike)
-                            navController.navigate("trackHike/$hikeJson")
                         } else {
                             showPrompt = true
                         }
@@ -216,7 +219,7 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
         if (showPrompt) {
             DurationDialog(
                 onConfirm = { hours, minutes ->
-                    hike.expectedReturnTime = "$hours:$minutes"
+                    hike.duration = "$hours:$minutes"
                     hikeListViewModel.startHike(hike, apiService,
                         onSuccess = {
                             val hikeJson = gson.toJson(hike)

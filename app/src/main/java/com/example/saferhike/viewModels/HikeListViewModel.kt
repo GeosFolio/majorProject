@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 
-class HikeListViewModel() : ViewModel() {
+class HikeListViewModel : ViewModel() {
     private val _hikes = MutableStateFlow<List<HikeReq>>(emptyList())
     fun getUserHikes(
         apiService: ApiService,

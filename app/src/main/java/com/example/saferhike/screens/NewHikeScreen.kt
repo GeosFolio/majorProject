@@ -1,7 +1,5 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.content.pm.PackageManager
 import android.location.Location
 import android.widget.Toast
@@ -14,10 +12,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,13 +32,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.saferhike.api.ApiService
 import com.example.saferhike.viewModels.AuthViewModel
 import com.example.saferhike.viewModels.HikeCreationViewModel
+import com.example.saferhike.viewModels.HikeCreationViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -42,21 +50,20 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewHikeScreen(
     navController: NavController,
     authViewModel: AuthViewModel,
     apiService: ApiService,
     hikeJson: String?,
-    viewModel: HikeCreationViewModel = remember {
-        HikeCreationViewModel(authViewModel.currentUser?.uid ?: "Uid Missing", hikeJson)
-    }
+    viewModel: HikeCreationViewModel = viewModel(factory = HikeCreationViewModelFactory(authViewModel.currentUser?.uid ?: "Uid Missing", hikeJson))
 ) {
     var locationError by remember { mutableStateOf<String?>(null) }
     var permissionGranted by remember { mutableStateOf(false) }
@@ -113,77 +120,98 @@ fun NewHikeScreen(
         }
 
         val hikeState by viewModel.hikeReq.collectAsState()
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Scaffold (
+            topBar = {
+                TopAppBar(
+                    title = { Text("New Hike") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            // Navigate back to the homepage
+                            navController.popBackStack()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                    }
+                )
+            }
         ) {
-            // Hike Name Field
-            OutlinedTextField(
-                value = hikeState.name,
-                onValueChange = { viewModel.updateHikeDetails(name = it) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Hike Name") },
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Google Map
-            GoogleMap(
-                modifier = Modifier.height(360.dp),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(isMyLocationEnabled = permissionGranted),
-                uiSettings = MapUiSettings(zoomControlsEnabled = true),
-                onMapClick = { latLng ->
-                    clickedPosition = latLng
-                    showDialog = true
-                }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                hikeState.markers.forEach { marker ->
-                    Marker(
-                        state = MarkerState(LatLng(marker.lat, marker.lng)),
-                        title = marker.title,
-                        snippet = marker.description,
-                        onInfoWindowClick = {
-                            selectedMarkerPosition = LatLng(marker.lat, marker.lng)
-                            showDeleteDialog = true
-                        }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
+                // Hike Name Field
+                OutlinedTextField(
+                    value = hikeState.name,
+                    onValueChange = { viewModel.updateHikeDetails(name = it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Hike Name") },
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Supplies Field
-            OutlinedTextField(
-                value = hikeState.supplies,
-                onValueChange = { viewModel.updateHikeDetails(supplies = it) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Supplies") },
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Save Hike Button
-            Button(
-                onClick = {
-                    viewModel.saveHike(
-                        apiService = apiService,
-                        onSuccess = { navController.popBackStack() },
-                        onError = { e ->
-                            Toast.makeText(context, e, Toast.LENGTH_LONG).show()
-                            result = e
-                        }
-                    )
+                // Google Map
+                GoogleMap(
+                    modifier = Modifier.height(360.dp),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = permissionGranted,
+                        mapType = MapType.HYBRID),
+                    uiSettings = MapUiSettings(zoomControlsEnabled = true),
+                    onMapClick = { latLng ->
+                        clickedPosition = latLng
+                        showDialog = true
+                    }
+                ) {
+                    hikeState.markers.forEach { marker ->
+                        Marker(
+                            state = MarkerState(LatLng(marker.lat, marker.lng)),
+                            title = marker.title,
+                            snippet = marker.description,
+                            onInfoWindowClick = {
+                                selectedMarkerPosition = LatLng(marker.lat, marker.lng)
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
                 }
-            ) {
-                Text(text = "Save Hike")
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Supplies Field
+                OutlinedTextField(
+                    value = hikeState.supplies,
+                    onValueChange = { viewModel.updateHikeDetails(supplies = it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Supplies") },
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Save Hike Button
+                Button(
+                    onClick = {
+                        viewModel.saveHike(
+                            apiService = apiService,
+                            onSuccess = { navController.popBackStack() },
+                            onError = { e ->
+                                Toast.makeText(context, e, Toast.LENGTH_LONG).show()
+                                result = e
+                            }
+                        )
+                    }
+                ) {
+                    Text(text = "Save Hike")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = result)
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = result)
         }
+
 
         // Marker Dialog
         if (showDialog) {
@@ -254,9 +282,10 @@ fun MarkerDialog (
     description: String,
     onDescriptionChange: (String) -> Unit
 ) {
-   AlertDialog(onDismissRequest = { /*TODO*/ },
+   AlertDialog(
+       onDismissRequest = { onDismiss() },
        confirmButton = {
-           Button( onClick = { onConfirm(title, description) } ) {
+           Button( onClick = { onConfirm(title, description) }) {
                Text(text = "Add")
            }
                        },

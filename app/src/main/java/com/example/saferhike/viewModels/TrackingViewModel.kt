@@ -14,7 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiService
-import com.example.saferhike.composables.LocationCallback
+import com.example.saferhike.tracking.LocationCallback
 import com.example.saferhike.tracking.LocationService
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson

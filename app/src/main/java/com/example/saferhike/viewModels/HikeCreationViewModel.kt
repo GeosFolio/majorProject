@@ -1,10 +1,8 @@
 package com.example.saferhike.viewModels
 
 import android.os.Parcelable
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.saferhike.api.ApiRoutes
 import com.example.saferhike.api.ApiService
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
@@ -26,7 +24,7 @@ class HikeCreationViewModel(uid: String, hikeJson: String?) : ViewModel() {
             supplies = "",
             lat = 0.0,
             lng = 0.0,
-            expectedReturnTime = "",
+            duration = "",
             markers = emptyList(),
             traveledPath = emptyList()
         )
@@ -44,7 +42,7 @@ class HikeCreationViewModel(uid: String, hikeJson: String?) : ViewModel() {
         _hikeReq.value = _hikeReq.value.copy(
             name = name ?: _hikeReq.value.name,
             supplies = supplies ?: _hikeReq.value.supplies,
-            expectedReturnTime = expectedReturnTime ?: _hikeReq.value.expectedReturnTime,
+            duration = expectedReturnTime ?: _hikeReq.value.duration,
             lat = lat ?: _hikeReq.value.lat,
             lng = lng ?: _hikeReq.value.lng
         )
@@ -104,7 +102,7 @@ data class HikeReq(
     val supplies: String,
     val lat: Double,
     val lng: Double,
-    var expectedReturnTime: String,
+    var duration: String,
     val markers: List<HikeMarker>,
     var traveledPath: List<LatLng>,
     var completed: Boolean = false,

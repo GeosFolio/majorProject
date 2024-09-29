@@ -1,4 +1,4 @@
-package com.example.saferhike.composables
+package com.example.saferhike.screens
 
 import android.Manifest
 import android.app.Application
@@ -39,6 +39,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
@@ -134,7 +135,7 @@ fun TrackingScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 GoogleMap(
                     cameraPositionState = cameraPositionState,
-                    properties = MapProperties(isMyLocationEnabled = true),
+                    properties = MapProperties(isMyLocationEnabled = true, mapType = MapType.HYBRID),
                     uiSettings = MapUiSettings(zoomControlsEnabled = true),
                     modifier = Modifier
                         .weight(1f) // Make the map fill available space but not take all of it
