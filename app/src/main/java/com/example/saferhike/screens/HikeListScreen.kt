@@ -126,12 +126,11 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
     var showPrompt by remember { mutableStateOf(false) }
     val gson = Gson()
     Log.d("HikeListScreen", "Making Hike Card With: $hike : $inProgressHike")
-    // The card UI
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .animateContentSize(), // Smooth transition when expanding/collapsing
+            .animateContentSize(),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -168,7 +167,8 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                     Button(onClick = {
                         val hikeJson = gson.toJson(hike)
                         navController.navigate("newHike/$hikeJson")
-                    }) {
+                    },
+                        enabled = inProgressHike == null || inProgressHike.pid != hike.pid) {
                         Text(text = "Edit")
                     }
                     Button(onClick = {
@@ -197,8 +197,6 @@ fun ExpandableHikeCard(hike: HikeReq, navController: NavController,
                         }
                     }
                     Button(onClick = {
-                        // Handle delete action
-                        // Call API to delete hike or trigger delete logic here
                         hikeListViewModel.delete(apiService.apiService, hike,
                             onSuccess = {
                                 Toast.makeText(context, "Hike Deleted Successfully",

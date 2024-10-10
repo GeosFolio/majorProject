@@ -27,6 +27,7 @@ class HikeListViewModel : ViewModel() {
                     val decryptedHikes = emptyList<HikeReq>().toMutableList()
                     Log.d("HikeListViewModel", "Trying to decrypt hike list")
                     hikes?.forEach {
+                        Log.d("TestData", "Encrypted Hike Req: ")
                         decryptedHikes += apiService.decryptHikeReq(it, uid)
                     }
                     Log.d("HikeListViewModel", "Done decrypting hike list")
@@ -72,6 +73,7 @@ class HikeListViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val encryptedHikeReq = apiService.encryptHikeReq(hikeReq)
+                Log.d("TestData", "Start Hike data: $encryptedHikeReq")
                 val response = apiService.apiService.startHike(encryptedHikeReq)
                 if (response.isSuccessful) {
                     onSuccess()
@@ -106,6 +108,7 @@ class HikeListViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.d("HikeListViewModel", "Error: ${e.message}")
                 onError("${e.message}")
+                onSuccess(emptyList())
             }
         }
     }

@@ -56,6 +56,7 @@ class AuthViewModel : ViewModel() {
                         }
                     }
                 } else {
+                    Log.d("AuthViewModel", "${task.exception?.message}")
                     _authState.value =
                         AuthState.Error(task.exception?.message ?: "Something went wrong")
                 }
@@ -93,6 +94,7 @@ class AuthViewModel : ViewModel() {
                     viewModelScope.launch {
                         try {
                             val encryptedUserReq = apiService.encryptUserReq(userData)
+                            Log.d("TestData", "Create User data: $encryptedUserReq")
                             val response = apiService.apiService.createUser(encryptedUserReq)
                             if (!response.isSuccessful) {
                                 _authState.value =
@@ -116,6 +118,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val encryptedUserReq = apiService.encryptUserReq(userReq)
+                Log.d("TestData", "Update User data: $encryptedUserReq")
                 val response = apiService.apiService.updateUser(encryptedUserReq)
                 if (response.isSuccessful) {
                     _authState.value = AuthState.Authenticated

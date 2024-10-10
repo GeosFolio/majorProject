@@ -1,5 +1,6 @@
 package com.example.saferhike.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -49,6 +51,7 @@ fun EditAccountScreen(
     var fName by remember { mutableStateOf(userData.fName) }
     var lName by remember { mutableStateOf(userData.lName) }
     val emergencyContacts = remember { SnapshotStateList<EmergencyContact>() }
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         emergencyContacts.addAll(userData.emergencyContacts)
     }
@@ -58,7 +61,6 @@ fun EditAccountScreen(
             TopAppBar(title = { Text("Edit Account") },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Navigate back to the homepage
                         navController.popBackStack()
                     }) {
                         Icon(
@@ -75,7 +77,7 @@ fun EditAccountScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
-                    .padding(paddingValues), // Apply padding from Scaffold
+                    .padding(paddingValues),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -155,11 +157,16 @@ fun EditAccountScreen(
                 }
                 Button(
                     onClick = {
-                        authViewModel.userData.fName = fName
-                        authViewModel.userData.lName = lName
-                        authViewModel.userData.emergencyContacts = emergencyContacts.toList()
-                        authViewModel.updateUser(authViewModel.userData, apiService)
-                        navController.popBackStack()
+                        if (validateContacts(emergencyContacts)) {
+                            authViewModel.userData.fName = fName
+                            authViewModel.userData.lName = lName
+                            authViewModel.userData.emergencyContacts = emergencyContacts.toList()
+                            authViewModel.updateUser(authViewModel.userData, apiService)
+                            navController.popBackStack()
+                        } else {
+                            Toast.makeText(context, "Need at least 1 email or phone number",
+                                Toast.LENGTH_LONG).show()
+                        }
                     }
                 ) {
                     Text(text = "Save Changes")

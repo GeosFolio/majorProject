@@ -100,7 +100,12 @@ class LocationService: Service() {
                     count = 0
                     hikeReq?.let {
                         val encryptedHikeReq = apiService.encryptHikeReq(it)
-                        apiService.apiService.updateHike(encryptedHikeReq)
+                        try {
+                            apiService.apiService.updateHike(encryptedHikeReq)
+                        } catch (e: Exception){
+                            Log.d("LocationService", "Failed to connect. Trying again later.")
+                        }
+
                     }
                 }
                 for (client in clients) {
@@ -120,7 +125,11 @@ class LocationService: Service() {
                 it.inProgress = false
                 it.completed = true
                 val encryptedHikeReq = apiService.encryptHikeReq(it)
-                apiService.apiService.updateHike(encryptedHikeReq)
+                try {
+                    apiService.apiService.updateHike(encryptedHikeReq)
+                } catch (e: Exception){
+                    Log.d("LocationService", "Failed to connect. Trying again later.")
+                }
             }
         }
         stopForeground(STOP_FOREGROUND_REMOVE)

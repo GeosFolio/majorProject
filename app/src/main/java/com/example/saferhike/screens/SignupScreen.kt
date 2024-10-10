@@ -69,11 +69,9 @@ fun SignupScreen(
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Fixed header section
         Text(text = "SaferHike", fontSize = 32.sp)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Form fields
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -86,6 +84,7 @@ fun SignupScreen(
             visualTransformation = PasswordVisualTransformation()
         )
         Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
             value = fName,
             onValueChange = { fName = it },
@@ -98,11 +97,9 @@ fun SignupScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Scrollable Emergency Contacts Section
         Text(text = "Emergency Contacts", fontSize = 20.sp, color = Color.Gray)
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Use LazyColumn for emergency contacts
         LazyColumn(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally// Take remaining space
@@ -126,6 +123,7 @@ fun SignupScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
+
                     OutlinedTextField(
                         value = contact.phoneNumber,
                         onValueChange = { newPhone ->
@@ -138,7 +136,6 @@ fun SignupScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    // Remove contact button
                     if (emergencyContacts.size > 1) {
                         Button(
                             onClick = {
@@ -153,7 +150,6 @@ fun SignupScreen(
             }
 
             item {
-                // Add contact button
                 Button(
                     onClick = {
                         emergencyContacts.add(EmergencyContact("", ""))
@@ -190,5 +186,5 @@ fun SignupScreen(
 }
 
 fun validateContacts(contacts: List<EmergencyContact>): Boolean {
-    return contacts.all { it.email != "" || it.phoneNumber != "" }
+    return contacts.all { it.email != "" || it.phoneNumber != "" } && contacts.isNotEmpty()
 }

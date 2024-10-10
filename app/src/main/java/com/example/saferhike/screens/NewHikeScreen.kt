@@ -126,7 +126,6 @@ fun NewHikeScreen(
                     title = { Text("New Hike") },
                     navigationIcon = {
                         IconButton(onClick = {
-                            // Navigate back to the homepage
                             navController.popBackStack()
                         }) {
                             Icon(
@@ -146,7 +145,6 @@ fun NewHikeScreen(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Hike Name Field
                 OutlinedTextField(
                     value = hikeState.name,
                     onValueChange = { viewModel.updateHikeDetails(name = it) },
@@ -156,7 +154,6 @@ fun NewHikeScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Google Map
                 GoogleMap(
                     modifier = Modifier.height(360.dp),
                     cameraPositionState = cameraPositionState,
@@ -182,7 +179,6 @@ fun NewHikeScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Supplies Field
                 OutlinedTextField(
                     value = hikeState.supplies,
                     onValueChange = { viewModel.updateHikeDetails(supplies = it) },
@@ -192,7 +188,6 @@ fun NewHikeScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Save Hike Button
                 Button(
                     onClick = {
                         viewModel.saveHike(
@@ -208,12 +203,11 @@ fun NewHikeScreen(
                     Text(text = "Save Hike")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text(text = result)
             }
         }
 
-
-        // Marker Dialog
         if (showDialog) {
             MarkerDialog(
                 onDismiss = { showDialog = false },
@@ -228,7 +222,6 @@ fun NewHikeScreen(
             )
         }
 
-        // Delete Marker Dialog
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },

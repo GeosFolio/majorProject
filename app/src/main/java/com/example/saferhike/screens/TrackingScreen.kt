@@ -67,9 +67,9 @@ fun TrackingScreen(
     ) { permissions ->
         viewModel.permissionGranted.value =
             permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true &&
-                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+                    permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true &&
+                    permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] == true
     }
-    // Request permissions
     LaunchedEffect(Unit) {
         viewModel.checkPermissions(context)
         if (!permissionGranted) {
@@ -112,7 +112,6 @@ fun TrackingScreen(
                     title = { Text(text = "Current Hike: ${hike.name}") },
                     navigationIcon = {
                         IconButton(onClick = {
-                            // Navigate back to the homepage
                             navController.popBackStack()
                         }) {
                             Icon(
@@ -138,7 +137,7 @@ fun TrackingScreen(
                     properties = MapProperties(isMyLocationEnabled = true, mapType = MapType.HYBRID),
                     uiSettings = MapUiSettings(zoomControlsEnabled = true),
                     modifier = Modifier
-                        .weight(1f) // Make the map fill available space but not take all of it
+                        .weight(1f)
                 ) {
                     hike.markers.forEach { marker ->
                         Marker(
@@ -162,10 +161,11 @@ fun TrackingScreen(
                 Button(onClick = {
                     viewModel.stopHikeTracking(context)
                     navController.popBackStack()
+                    navController.popBackStack()
                 }) {
                     Text(text = "Complete Hike")
                 }
-                Spacer(modifier = Modifier.height(16.dp)) // Add some space below the button
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     } else {

@@ -1,6 +1,7 @@
 package com.example.saferhike.viewModels
 
 import android.os.Parcelable
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.saferhike.api.ApiService
@@ -73,9 +74,11 @@ class HikeCreationViewModel(uid: String, hikeJson: String?) : ViewModel() {
             try {
                 val response: Response<Void> = if (_hikeReq.value.pid != 0) {
                     val encryptedHikeReq = apiService.encryptHikeReq(_hikeReq.value)
+                    Log.d("TestData", "Update Hike data: $encryptedHikeReq")
                     apiService.apiService.updateHike(encryptedHikeReq)
                 } else {
                     val encryptedHikeReq = apiService.encryptHikeReq(_hikeReq.value)
+                    Log.d("TestData", "Post Hike data: $encryptedHikeReq")
                     apiService.apiService.postHike(encryptedHikeReq)
                 }
                 if (response.isSuccessful) {

@@ -18,10 +18,12 @@ import com.example.saferhike.tracking.LocationCallback
 import com.example.saferhike.tracking.LocationService
 import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
-class TrackingViewModel(application: Application, hikeJson: String, val apiService: ApiService) : AndroidViewModel(application) {
+class TrackingViewModel(application: Application, hikeJson: String, val apiService: ApiService)
+    : AndroidViewModel(application) {
     val permissionGranted = mutableStateOf(false)
     val traveledPath = mutableStateOf<List<LatLng>>(emptyList())
     private val gson = Gson()
@@ -87,7 +89,11 @@ class TrackingViewModel(application: Application, hikeJson: String, val apiServi
                 it.inProgress = false
                 it.completed = true
                 val encryptedHikeReq = apiService.encryptHikeReq(it)
-                apiService.apiService.updateHike(encryptedHikeReq)
+                try {
+                    apiService.apiService.updateHike(encryptedHikeReq)
+                } catch (e: Exception){
+                    Log.d("LocationService", "Failed to connect. Trying again later.")
+                }
             }
         }
     }

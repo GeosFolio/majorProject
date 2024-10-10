@@ -38,6 +38,7 @@ fun AppNavigator(innerPadding: PaddingValues, authViewModel: AuthViewModel) {
             NewHikeScreen(navController, authViewModel, apiService, hikeJson)
         }
         composable("newHike") {
+            // Done
             NewHikeScreen(navController, authViewModel, apiService, null)
         }
         composable("hikes") {
